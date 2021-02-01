@@ -44,12 +44,15 @@ public class ProgMain {
 		}
 		
 		System.out.println("\n--- Test 4: teste insert ---");
-		
-		Seller novoVendedor = new Seller(null, "Carlos", "carlos@email.com", new Date(), 9999.0, department );
-		
+		Seller novoVendedor = new Seller(null, "Carlos", "carlos@email.com", new Date(), 9999.0, department);
 		sellerDao.insert(novoVendedor);
-		
 		System.out.println("Insert Novo id = " + novoVendedor.getId());
 		
+		System.out.println("\n--- Test 5: teste update ---");
+		seller = sellerDao.findById(1);
+		seller.setName("Margareth Brown");
+		seller.setEmail("margareth@email.com");
+		sellerDao.update(seller);
+		System.out.println("Update executado!!!");	
 	}
 }
