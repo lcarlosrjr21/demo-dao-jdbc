@@ -4,7 +4,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import db.DB;
 import db.DbException;
@@ -51,7 +54,7 @@ public class SellerDaoJDBC implements SellerDao {
 			rs = st.executeQuery(); // resultado da consulta no ResultSet
 			
 			if(rs.next()) {
-				Department dep = isntantiateDepartment(rs);
+				Department dep = instantiateDepartment(rs);
 				Seller obj = instantiateSeller(rs, dep);
 				return obj;
 			}
@@ -78,7 +81,7 @@ public class SellerDaoJDBC implements SellerDao {
 		return obj;
 	}
 
-	private Department isntantiateDepartment(ResultSet rs) throws SQLException {
+	private Department instantiateDepartment(ResultSet rs) throws SQLException {
 		Department dep = new Department();
 		dep.setId(rs.getInt("DepartmentId"));
 		dep.setName(rs.getString("NomeDepartamento"));
@@ -89,6 +92,45 @@ public class SellerDaoJDBC implements SellerDao {
 	public List<Seller> findAll() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public List<Seller> findByDepartment(Department department) {
+		PreparedStatement st = null;
+		ResultSet rs = null;
+		try {
+			st = conn.prepareStatement("select seller.*, department.Name as NomeDepartamento\r\n"
+					+ "from seller inner join department on seller.DepartmentId = department.Id\r\n"
+					+ "where DepartmentId = ? order by Name");
+			
+			st.setInt(1, department.getId()); // passando o valor do id no único interrogacao que existe na sentença
+			rs = st.executeQuery(); // resultado da consulta no ResultSet
+			
+			List<Seller> list = new ArrayList<>();
+			Map<Integer, Department> map = new HashMap<>(); // estrutura map vazia
+			
+			while(rs.next()) {
+				
+				Department dep = map.get(rs.getInt("DepartmentId"));
+				
+				if(dep == null) {
+					dep = instantiateDepartment(rs);
+					map.put(rs.getInt("DepartmentId"), dep);
+				}
+				
+				Seller obj = instantiateSeller(rs, dep);
+				list.add(obj);				
+			}
+			return list;
+		}
+		catch (SQLException e ) {
+			throw new DbException(e.getMessage());
+		}
+		
+		finally {
+			DB.closeStatement(st);
+			DB.closeResultSet(rs);
+		}
 	}
 	
 }
