@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,29 +17,59 @@ import model.entities.Department;
 import model.entities.Seller;
 
 public class SellerDaoJDBC implements SellerDao {
-	
+
 	private Connection conn;
-	
+
 	public SellerDaoJDBC(Connection conn) {
 		this.conn = conn;
 	}
-	
+
 	@Override
 	public void insert(Seller obj) {
-		// TODO Auto-generated method stub
+	PreparedStatement st = null;
+	try {
+		st = conn.prepareStatement("INSERT INTO seller (Name, Email, BirthDate, BaseSalary, DepartmentId) VALUES (?, ?, ?, ?, ?)", // inserindo seleer
+				+ Statement.RETURN_GENERATED_KEYS); // retorna o ID do novo vendedor inserido
 		
+		st.setString(1, obj.getName());
+		st.setString(2, obj.getEmail());
+		st.setDate(3, new java.sql.Date(obj.getBirthDate().getTime()));
+		st.setDouble(4, obj.getBaseSalary());
+		st.setInt(5, obj.getDepartment().getId());
+		
+		int linhasAfetadas = st.executeUpdate();
+		
+		if (linhasAfetadas>0) {
+			ResultSet rs = st.getGeneratedKeys();
+			if (rs.next()) {
+				int id = rs.getInt(1);
+				obj.setId(id);
+			}
+			DB.closeResultSet(rs);
+		}
+		else {
+			throw new DbException("Erro inesperado! Nenhuma linha afetada");
+		}
+	}
+		catch (SQLException e ){
+			throw new DbException(e.getMessage());
+		}
+		finally {
+			DB.closeStatement(st);
+			
+		}
 	}
 
 	@Override
 	public void update(Seller obj) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void deleteById(Integer id) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -48,22 +79,21 @@ public class SellerDaoJDBC implements SellerDao {
 		try {
 			st = conn.prepareStatement("select seller.*, department.Name as NomeDepartamento\r\n"
 					+ "from seller inner join department on seller.DepartmentId = department.Id\r\n"
-					+ "where seller.Id = ?"	);
-			
+					+ "where seller.Id = ?");
+
 			st.setInt(1, id); // passando o valor do id no único interrogacao que existe na sentença
 			rs = st.executeQuery(); // resultado da consulta no ResultSet
-			
-			if(rs.next()) {
+
+			if (rs.next()) {
 				Department dep = instantiateDepartment(rs);
 				Seller obj = instantiateSeller(rs, dep);
 				return obj;
 			}
 			return null;
-		}
-		catch (SQLException e ) {
+		} catch (SQLException e) {
 			throw new DbException(e.getMessage());
 		}
-		
+
 		finally {
 			DB.closeStatement(st);
 			DB.closeResultSet(rs);
@@ -96,30 +126,29 @@ public class SellerDaoJDBC implements SellerDao {
 			st = conn.prepareStatement("select seller.*, department.Name as NomeDepartamento\r\n"
 					+ "from seller inner join department on seller.DepartmentId = department.Id\r\n"
 					+ " order by Name");
-			
+
 			rs = st.executeQuery(); // resultado da consulta no ResultSet
-			
+
 			List<Seller> list = new ArrayList<>();
 			Map<Integer, Department> map = new HashMap<>(); // estrutura map vazia
-			
-			while(rs.next()) {
-				
+
+			while (rs.next()) {
+
 				Department dep = map.get(rs.getInt("DepartmentId"));
-				
-				if(dep == null) {
+
+				if (dep == null) {
 					dep = instantiateDepartment(rs);
 					map.put(rs.getInt("DepartmentId"), dep);
 				}
-				
+
 				Seller obj = instantiateSeller(rs, dep);
-				list.add(obj);				
+				list.add(obj);
 			}
 			return list;
-		}
-		catch (SQLException e ) {
+		} catch (SQLException e) {
 			throw new DbException(e.getMessage());
 		}
-		
+
 		finally {
 			DB.closeStatement(st);
 			DB.closeResultSet(rs);
@@ -134,35 +163,34 @@ public class SellerDaoJDBC implements SellerDao {
 			st = conn.prepareStatement("select seller.*, department.Name as NomeDepartamento\r\n"
 					+ "from seller inner join department on seller.DepartmentId = department.Id\r\n"
 					+ "where DepartmentId = ? order by Name");
-			
+
 			st.setInt(1, department.getId()); // passando o valor do id no único interrogacao que existe na sentença
 			rs = st.executeQuery(); // resultado da consulta no ResultSet
-			
+
 			List<Seller> list = new ArrayList<>();
 			Map<Integer, Department> map = new HashMap<>(); // estrutura map vazia
-			
-			while(rs.next()) {
-				
+
+			while (rs.next()) {
+
 				Department dep = map.get(rs.getInt("DepartmentId"));
-				
-				if(dep == null) {
+
+				if (dep == null) {
 					dep = instantiateDepartment(rs);
 					map.put(rs.getInt("DepartmentId"), dep);
 				}
-				
+
 				Seller obj = instantiateSeller(rs, dep);
-				list.add(obj);				
+				list.add(obj);
 			}
 			return list;
-		}
-		catch (SQLException e ) {
+		} catch (SQLException e) {
 			throw new DbException(e.getMessage());
 		}
-		
+
 		finally {
 			DB.closeStatement(st);
 			DB.closeResultSet(rs);
 		}
 	}
-	
+
 }
