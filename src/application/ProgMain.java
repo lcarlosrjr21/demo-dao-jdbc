@@ -2,6 +2,7 @@ package application;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Scanner;
 
 import model.dao.DaoFactory;
 import model.dao.SellerDao;
@@ -18,6 +19,8 @@ public class ProgMain {
 		 * Seller seller = new Seller(21, "Luiz", "luiz@email.com", new Date(), 7000.0,
 		 * obj);
 		 */
+		
+		Scanner sc = new Scanner(System.in);
 
 		SellerDao sellerDao = DaoFactory.createSellerDao();
 
@@ -54,5 +57,12 @@ public class ProgMain {
 		seller.setEmail("margareth@email.com");
 		sellerDao.update(seller);
 		System.out.println("Update executado!!!");	
+		
+		System.out.println("\n--- Test 6: teste delete ---");
+		System.out.print("Entre com id do vendedor para apagar: ");
+		int id = sc.nextInt();
+		sellerDao.deleteById(id);
+		System.out.println("Apagar completado!!!");
+		sc.close();
 	}
 }
